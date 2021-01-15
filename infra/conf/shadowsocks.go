@@ -5,9 +5,9 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/shadowsocks"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/proxy/shadowsocks"
 )
 
 func cipherFromString(c string) shadowsocks.CipherType {
@@ -26,8 +26,6 @@ func cipherFromString(c string) shadowsocks.CipherType {
 		return shadowsocks.CipherType_AES_256_GCM
 	case "chacha20-poly1305", "aead_chacha20_poly1305", "chacha20-ietf-poly1305":
 		return shadowsocks.CipherType_CHACHA20_POLY1305
-	case "none", "plain":
-		return shadowsocks.CipherType_NONE
 	default:
 		return shadowsocks.CipherType_UNKNOWN
 	}
@@ -39,6 +37,7 @@ type ShadowsocksServerConfig struct {
 	UDP         bool         `json:"udp"`
 	Level       byte         `json:"level"`
 	Email       string       `json:"email"`
+	OTA         *bool        `json:"ota"`
 	NetworkList *NetworkList `json:"network"`
 }
 
@@ -52,6 +51,14 @@ func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 	}
 	account := &shadowsocks.Account{
 		Password: v.Password,
+		Ota:      shadowsocks.Account_Auto,
+	}
+	if v.OTA != nil {
+		if *v.OTA {
+			account.Ota = shadowsocks.Account_Enabled
+		} else {
+			account.Ota = shadowsocks.Account_Disabled
+		}
 	}
 	account.CipherType = cipherFromString(v.Cipher)
 	if account.CipherType == shadowsocks.CipherType_UNKNOWN {
@@ -101,6 +108,10 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 		}
 		account := &shadowsocks.Account{
 			Password: server.Password,
+			Ota:      shadowsocks.Account_Enabled,
+		}
+		if !server.Ota {
+			account.Ota = shadowsocks.Account_Disabled
 		}
 		account.CipherType = cipherFromString(server.Cipher)
 		if account.CipherType == shadowsocks.CipherType_UNKNOWN {

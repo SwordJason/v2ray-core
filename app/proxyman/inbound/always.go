@@ -3,17 +3,17 @@ package inbound
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/mux"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/dice"
+	"github.com/SwordJason/v2ray-core/common/errors"
+	"github.com/SwordJason/v2ray-core/common/mux"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/features/policy"
+	"github.com/SwordJason/v2ray-core/features/stats"
+	"github.com/SwordJason/v2ray-core/proxy"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {
@@ -103,7 +103,6 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 				sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
 				uplinkCounter:   uplinkCounter,
 				downlinkCounter: downlinkCounter,
-				ctx:             ctx,
 			}
 			h.workers = append(h.workers, worker)
 		}

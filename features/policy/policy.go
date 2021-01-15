@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/features"
+	"github.com/SwordJason/v2ray-core/common/platform"
+	"github.com/SwordJason/v2ray-core/features"
 )
 
 // Timeout contains limits for connection timeout.
@@ -41,10 +41,6 @@ type SystemStats struct {
 	InboundUplink bool
 	// Whether or not to enable stat counter for downlink traffic in inbound handlers.
 	InboundDownlink bool
-	// Whether or not to enable stat counter for uplink traffic in outbound handlers.
-	OutboundUplink bool
-	// Whether or not to enable stat counter for downlink traffic in outbound handlers.
-	OutboundDownlink bool
 }
 
 // System contains policy settings at system level.
@@ -117,9 +113,7 @@ func defaultBufferPolicy() Buffer {
 func SessionDefault() Session {
 	return Session{
 		Timeouts: Timeout{
-			//Align Handshake timeout with nginx client_header_timeout
-			//So that this value will not indicate server identity
-			Handshake:      time.Second * 60,
+			Handshake:      time.Second * 4,
 			ConnectionIdle: time.Second * 300,
 			UplinkOnly:     time.Second * 1,
 			DownlinkOnly:   time.Second * 1,

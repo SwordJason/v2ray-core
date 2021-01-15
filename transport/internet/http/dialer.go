@@ -10,22 +10,22 @@ import (
 	"sync"
 
 	"golang.org/x/net/http2"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/pipe"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/tls"
+	"github.com/SwordJason/v2ray-core/transport/pipe"
 )
 
 var (
 	globalDialerMap    map[net.Destination]*http.Client
-	globalDialerAccess sync.Mutex
+	globalDailerAccess sync.Mutex
 )
 
 func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.Config) (*http.Client, error) {
-	globalDialerAccess.Lock()
-	defer globalDialerAccess.Unlock()
+	globalDailerAccess.Lock()
+	defer globalDailerAccess.Unlock()
 
 	if globalDialerMap == nil {
 		globalDialerMap = make(map[net.Destination]*http.Client)
@@ -54,26 +54,9 @@ func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.C
 			if err != nil {
 				return nil, err
 			}
-
-			cn := gotls.Client(pconn, tlsConfig)
-			if err := cn.Handshake(); err != nil {
-				return nil, err
-			}
-			if !tlsConfig.InsecureSkipVerify {
-				if err := cn.VerifyHostname(tlsConfig.ServerName); err != nil {
-					return nil, err
-				}
-			}
-			state := cn.ConnectionState()
-			if p := state.NegotiatedProtocol; p != http2.NextProtoTLS {
-				return nil, newError("http2: unexpected ALPN protocol " + p + "; want q" + http2.NextProtoTLS).AtError()
-			}
-			if !state.NegotiatedProtocolIsMutual {
-				return nil, newError("http2: could not negotiate protocol mutually").AtError()
-			}
-			return cn, nil
+			return gotls.Client(pconn, tlsConfig), nil
 		},
-		TLSClientConfig: tlsSettings.GetTLSConfig(tls.WithDestination(dest)),
+		TLSClientConfig: tlsSettings.GetTLSConfig(tls.WithDestination(dest), tls.WithNextProto("h2")),
 	}
 
 	client := &http.Client{

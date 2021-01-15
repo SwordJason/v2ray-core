@@ -7,7 +7,7 @@ import (
 	"io"
 	"sync"
 
-	"v2ray.com/core/common"
+	"github.com/SwordJason/v2ray-core/common"
 )
 
 const (
@@ -83,7 +83,7 @@ func generateRandomBytes(random []byte, connType [4]byte) {
 			continue
 		}
 
-		if (uint32(random[7])<<24)|(uint32(random[6])<<16)|(uint32(random[5])<<8)|uint32(random[4]) == 0x00000000 {
+		if 0x00000000 == (uint32(random[7])<<24)|(uint32(random[6])<<16)|(uint32(random[5])<<8)|uint32(random[4]) {
 			continue
 		}
 

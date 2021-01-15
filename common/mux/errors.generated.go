@@ -1,6 +1,6 @@
 package mux
 
-import "v2ray.com/core/common/errors"
+import "github.com/SwordJason/v2ray-core/common/errors"
 
 type errPathObjHolder struct{}
 

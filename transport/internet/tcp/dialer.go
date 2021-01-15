@@ -5,12 +5,11 @@ package tcp
 import (
 	"context"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/xtls"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/tls"
 )
 
 // Dial dials a new TCP connection to the given destination.
@@ -22,18 +21,12 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	}
 
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
-		tlsConfig := config.GetTLSConfig(tls.WithDestination(dest))
-		/*
-			if config.IsExperiment8357() {
-				conn = tls.UClient(conn, tlsConfig)
-			} else {
-				conn = tls.Client(conn, tlsConfig)
-			}
-		*/
-		conn = tls.Client(conn, tlsConfig)
-	} else if config := xtls.ConfigFromStreamSettings(streamSettings); config != nil {
-		xtlsConfig := config.GetXTLSConfig(xtls.WithDestination(dest))
-		conn = xtls.Client(conn, xtlsConfig)
+		tlsConfig := config.GetTLSConfig(tls.WithDestination(dest), tls.WithNextProto("h2"))
+		if config.IsExperiment8357() {
+			conn = tls.UClient(conn, tlsConfig)
+		} else {
+			conn = tls.Client(conn, tlsConfig)
+		}
 	}
 
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)

@@ -3,12 +3,13 @@ package tcp
 import (
 	"net/http"
 
-	"v2ray.com/core/common/net"
+	"github.com/SwordJason/v2ray-core/common/net"
 )
 
 type Server struct {
 	Port        net.Port
 	PathHandler map[string]http.HandlerFunc
+	accepting   bool
 	server      *http.Server
 }
 

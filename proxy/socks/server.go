@@ -7,21 +7,21 @@ import (
 	"io"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	udp_proto "v2ray.com/core/common/protocol/udp"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/udp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/log"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	udp_proto "github.com/SwordJason/v2ray-core/common/protocol/udp"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/common/signal"
+	"github.com/SwordJason/v2ray-core/common/task"
+	"github.com/SwordJason/v2ray-core/features"
+	"github.com/SwordJason/v2ray-core/features/policy"
+	"github.com/SwordJason/v2ray-core/features/routing"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/udp"
 )
 
 // Server is a SOCKS 5 proxy server
@@ -229,10 +229,10 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn internet.Connection,
 				payload.Release()
 				continue
 			}
-			currentPacketCtx := ctx
+
 			newError("send packet to ", request.Destination(), " with ", payload.Len(), " bytes").AtDebug().WriteToLog(session.ExportIDToError(ctx))
 			if inbound := session.InboundFromContext(ctx); inbound != nil && inbound.Source.IsValid() {
-				currentPacketCtx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+				ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
 					From:   inbound.Source,
 					To:     request.Destination(),
 					Status: log.AccessAccepted,
@@ -240,8 +240,8 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn internet.Connection,
 				})
 			}
 
-			currentPacketCtx = protocol.ContextWithRequestHeader(currentPacketCtx, request)
-			udpServer.Dispatch(currentPacketCtx, request.Destination(), payload)
+			ctx = protocol.ContextWithRequestHeader(ctx, request)
+			udpServer.Dispatch(ctx, request.Destination(), payload)
 		}
 	}
 }

@@ -2,7 +2,7 @@
 
 package inbound
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 import (
 	"context"
@@ -11,23 +11,23 @@ import (
 	"sync"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/common/uuid"
-	feature_inbound "v2ray.com/core/features/inbound"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/encoding"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/errors"
+	"github.com/SwordJason/v2ray-core/common/log"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/common/signal"
+	"github.com/SwordJason/v2ray-core/common/task"
+	"github.com/SwordJason/v2ray-core/common/uuid"
+	feature_inbound "github.com/SwordJason/v2ray-core/features/inbound"
+	"github.com/SwordJason/v2ray-core/features/policy"
+	"github.com/SwordJason/v2ray-core/features/routing"
+	"github.com/SwordJason/v2ray-core/proxy/vmess"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/encoding"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 type userByEmail struct {

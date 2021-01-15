@@ -1,10 +1,9 @@
 package strmatcher_test
 
 import (
-	"reflect"
 	"testing"
 
-	. "v2ray.com/core/common/strmatcher"
+	. "github.com/SwordJason/v2ray-core/common/strmatcher"
 )
 
 func TestDomainMatcherGroup(t *testing.T) {
@@ -14,54 +13,48 @@ func TestDomainMatcherGroup(t *testing.T) {
 	g.Add("x.a.com", 3)
 	g.Add("a.b.com", 4)
 	g.Add("c.a.b.com", 5)
-	g.Add("x.y.com", 4)
-	g.Add("x.y.com", 6)
 
 	testCases := []struct {
 		Domain string
-		Result []uint32
+		Result uint32
 	}{
 		{
 			Domain: "x.v2ray.com",
-			Result: []uint32{1},
+			Result: 1,
 		},
 		{
 			Domain: "y.com",
-			Result: nil,
+			Result: 0,
 		},
 		{
 			Domain: "a.b.com",
-			Result: []uint32{4},
+			Result: 4,
 		},
-		{ // Matches [c.a.b.com, a.b.com]
+		{
 			Domain: "c.a.b.com",
-			Result: []uint32{5, 4},
+			Result: 4,
 		},
 		{
 			Domain: "c.a..b.com",
-			Result: nil,
+			Result: 0,
 		},
 		{
 			Domain: ".com",
-			Result: nil,
+			Result: 0,
 		},
 		{
 			Domain: "com",
-			Result: nil,
+			Result: 0,
 		},
 		{
 			Domain: "",
-			Result: nil,
-		},
-		{
-			Domain: "x.y.com",
-			Result: []uint32{4, 6},
+			Result: 0,
 		},
 	}
 
 	for _, testCase := range testCases {
 		r := g.Match(testCase.Domain)
-		if !reflect.DeepEqual(r, testCase.Result) {
+		if r != testCase.Result {
 			t.Error("Failed to match domain: ", testCase.Domain, ", expect ", testCase.Result, ", but got ", r)
 		}
 	}
@@ -70,7 +63,7 @@ func TestDomainMatcherGroup(t *testing.T) {
 func TestEmptyDomainMatcherGroup(t *testing.T) {
 	g := new(DomainMatcherGroup)
 	r := g.Match("v2ray.com")
-	if len(r) != 0 {
-		t.Error("Expect [], but ", r)
+	if r != 0 {
+		t.Error("Expect 0, but ", r)
 	}
 }

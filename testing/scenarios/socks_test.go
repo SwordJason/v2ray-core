@@ -7,19 +7,19 @@ import (
 	xproxy "golang.org/x/net/proxy"
 	socks4 "h12.io/socks"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/blackhole"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/socks"
-	"v2ray.com/core/testing/servers/tcp"
-	"v2ray.com/core/testing/servers/udp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/app/router"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/proxy/blackhole"
+	"github.com/SwordJason/v2ray-core/proxy/dokodemo"
+	"github.com/SwordJason/v2ray-core/proxy/freedom"
+	"github.com/SwordJason/v2ray-core/proxy/socks"
+	"github.com/SwordJason/v2ray-core/testing/servers/tcp"
+	"github.com/SwordJason/v2ray-core/testing/servers/udp"
 )
 
 func TestSocksBridgeTCP(t *testing.T) {
@@ -271,7 +271,7 @@ func TestSocksBridageUDPWithRouting(t *testing.T) {
 	}
 }
 
-func TestSocksConformanceMod(t *testing.T) {
+func TestSocksConformance(t *testing.T) {
 	tcpServer := tcp.Server{
 		MsgProcessor: xor,
 	}
@@ -348,7 +348,7 @@ func TestSocksConformanceMod(t *testing.T) {
 	}
 
 	{
-		dialer := socks4.Dial("socks4://" + net.TCPDestination(net.LocalHostIP, noAuthPort).NetAddr())
+		dialer := socks4.DialSocksProxy(socks4.SOCKS4, net.TCPDestination(net.LocalHostIP, noAuthPort).NetAddr())
 		conn, err := dialer("tcp", dest.NetAddr())
 		common.Must(err)
 		defer conn.Close()
@@ -359,8 +359,8 @@ func TestSocksConformanceMod(t *testing.T) {
 	}
 
 	{
-		dialer := socks4.Dial("socks4://" + net.TCPDestination(net.LocalHostIP, noAuthPort).NetAddr())
-		conn, err := dialer("tcp", net.TCPDestination(net.LocalHostIP, tcpServer.Port).NetAddr())
+		dialer := socks4.DialSocksProxy(socks4.SOCKS4A, net.TCPDestination(net.LocalHostIP, noAuthPort).NetAddr())
+		conn, err := dialer("tcp", net.TCPDestination(net.LocalHostDomain, tcpServer.Port).NetAddr())
 		common.Must(err)
 		defer conn.Close()
 

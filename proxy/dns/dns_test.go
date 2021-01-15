@@ -8,20 +8,20 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/dispatcher"
-	dnsapp "v2ray.com/core/app/dns"
-	"v2ray.com/core/app/policy"
-	"v2ray.com/core/app/proxyman"
-	_ "v2ray.com/core/app/proxyman/inbound"
-	_ "v2ray.com/core/app/proxyman/outbound"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	dns_proxy "v2ray.com/core/proxy/dns"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/testing/servers/tcp"
-	"v2ray.com/core/testing/servers/udp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/dispatcher"
+	dnsapp "github.com/SwordJason/v2ray-core/app/dns"
+	"github.com/SwordJason/v2ray-core/app/policy"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	_ "github.com/SwordJason/v2ray-core/app/proxyman/inbound"
+	_ "github.com/SwordJason/v2ray-core/app/proxyman/outbound"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	dns_proxy "github.com/SwordJason/v2ray-core/proxy/dns"
+	"github.com/SwordJason/v2ray-core/proxy/dokodemo"
+	"github.com/SwordJason/v2ray-core/testing/servers/tcp"
+	"github.com/SwordJason/v2ray-core/testing/servers/udp"
 )
 
 type staticHandler struct {
@@ -135,7 +135,7 @@ func TestUDPDNSTunnel(t *testing.T) {
 		m1.Id = dns.Id()
 		m1.RecursionDesired = true
 		m1.Question = make([]dns.Question, 1)
-		m1.Question[0] = dns.Question{Name: "google.com.", Qtype: dns.TypeA, Qclass: dns.ClassINET}
+		m1.Question[0] = dns.Question{"google.com.", dns.TypeA, dns.ClassINET}
 
 		c := new(dns.Client)
 		in, _, err := c.Exchange(m1, "127.0.0.1:"+strconv.Itoa(int(serverPort)))
@@ -159,7 +159,7 @@ func TestUDPDNSTunnel(t *testing.T) {
 		m1.Id = dns.Id()
 		m1.RecursionDesired = true
 		m1.Question = make([]dns.Question, 1)
-		m1.Question[0] = dns.Question{Name: "ipv4only.google.com.", Qtype: dns.TypeAAAA, Qclass: dns.ClassINET}
+		m1.Question[0] = dns.Question{"ipv4only.google.com.", dns.TypeAAAA, dns.ClassINET}
 
 		c := new(dns.Client)
 		c.Timeout = 10 * time.Second
@@ -176,7 +176,7 @@ func TestUDPDNSTunnel(t *testing.T) {
 		m1.Id = dns.Id()
 		m1.RecursionDesired = true
 		m1.Question = make([]dns.Question, 1)
-		m1.Question[0] = dns.Question{Name: "notexist.google.com.", Qtype: dns.TypeAAAA, Qclass: dns.ClassINET}
+		m1.Question[0] = dns.Question{"notexist.google.com.", dns.TypeAAAA, dns.ClassINET}
 
 		c := new(dns.Client)
 		in, _, err := c.Exchange(m1, "127.0.0.1:"+strconv.Itoa(int(serverPort)))
@@ -253,7 +253,7 @@ func TestTCPDNSTunnel(t *testing.T) {
 	m1.Id = dns.Id()
 	m1.RecursionDesired = true
 	m1.Question = make([]dns.Question, 1)
-	m1.Question[0] = dns.Question{Name: "google.com.", Qtype: dns.TypeA, Qclass: dns.ClassINET}
+	m1.Question[0] = dns.Question{"google.com.", dns.TypeA, dns.ClassINET}
 
 	c := &dns.Client{
 		Net: "tcp",
@@ -343,7 +343,7 @@ func TestUDP2TCPDNSTunnel(t *testing.T) {
 	m1.Id = dns.Id()
 	m1.RecursionDesired = true
 	m1.Question = make([]dns.Question, 1)
-	m1.Question[0] = dns.Question{Name: "google.com.", Qtype: dns.TypeA, Qclass: dns.ClassINET}
+	m1.Question[0] = dns.Question{"google.com.", dns.TypeA, dns.ClassINET}
 
 	c := &dns.Client{
 		Net: "tcp",

@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol/udp"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport"
-	. "v2ray.com/core/transport/internet/udp"
-	"v2ray.com/core/transport/pipe"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol/udp"
+	"github.com/SwordJason/v2ray-core/features/routing"
+	"github.com/SwordJason/v2ray-core/transport"
+	. "github.com/SwordJason/v2ray-core/transport/internet/udp"
+	"github.com/SwordJason/v2ray-core/transport/pipe"
 )
 
 type TestDispatcher struct {

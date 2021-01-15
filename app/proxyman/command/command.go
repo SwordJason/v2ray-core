@@ -7,11 +7,11 @@ import (
 
 	grpc "google.golang.org/grpc"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/features/inbound"
-	"v2ray.com/core/features/outbound"
-	"v2ray.com/core/proxy"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/features/inbound"
+	"github.com/SwordJason/v2ray-core/features/outbound"
+	"github.com/SwordJason/v2ray-core/proxy"
 )
 
 // InboundOperation is the interface for operations that applies to inbound handlers.
@@ -124,8 +124,6 @@ func (s *handlerServer) AlterOutbound(ctx context.Context, request *AlterOutboun
 	handler := s.ohm.GetHandler(request.Tag)
 	return &AlterOutboundResponse{}, operation.ApplyOutbound(ctx, handler)
 }
-
-func (s *handlerServer) mustEmbedUnimplementedHandlerServiceServer() {}
 
 type service struct {
 	v *core.Instance

@@ -8,20 +8,20 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/log"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	clog "v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/shadowsocks"
-	"v2ray.com/core/testing/servers/tcp"
-	"v2ray.com/core/testing/servers/udp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/log"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/errors"
+	clog "github.com/SwordJason/v2ray-core/common/log"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/proxy/dokodemo"
+	"github.com/SwordJason/v2ray-core/proxy/freedom"
+	"github.com/SwordJason/v2ray-core/proxy/shadowsocks"
+	"github.com/SwordJason/v2ray-core/testing/servers/tcp"
+	"github.com/SwordJason/v2ray-core/testing/servers/udp"
 )
 
 func TestShadowsocksAES256TCP(t *testing.T) {
@@ -35,6 +35,7 @@ func TestShadowsocksAES256TCP(t *testing.T) {
 	account := serial.ToTypedMessage(&shadowsocks.Account{
 		Password:   "shadowsocks-password",
 		CipherType: shadowsocks.CipherType_AES_256_CFB,
+		Ota:        shadowsocks.Account_Enabled,
 	})
 
 	serverPort := tcp.PickPort()
@@ -133,6 +134,7 @@ func TestShadowsocksAES128UDP(t *testing.T) {
 	account := serial.ToTypedMessage(&shadowsocks.Account{
 		Password:   "shadowsocks-password",
 		CipherType: shadowsocks.CipherType_AES_128_CFB,
+		Ota:        shadowsocks.Account_Enabled,
 	})
 
 	serverPort := tcp.PickPort()
@@ -259,6 +261,7 @@ func TestShadowsocksChacha20TCP(t *testing.T) {
 	account := serial.ToTypedMessage(&shadowsocks.Account{
 		Password:   "shadowsocks-password",
 		CipherType: shadowsocks.CipherType_CHACHA20_IETF,
+		Ota:        shadowsocks.Account_Enabled,
 	})
 
 	serverPort := tcp.PickPort()
@@ -746,6 +749,7 @@ func TestShadowsocksNone(t *testing.T) {
 	account := serial.ToTypedMessage(&shadowsocks.Account{
 		Password:   "shadowsocks-password",
 		CipherType: shadowsocks.CipherType_NONE,
+		Ota:        shadowsocks.Account_Enabled,
 	})
 
 	serverPort := tcp.PickPort()

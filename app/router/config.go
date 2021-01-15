@@ -3,9 +3,8 @@
 package router
 
 import (
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/outbound"
-	"v2ray.com/core/features/routing"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/features/outbound"
 )
 
 // CIDRList is an alias of []*CIDR to provide sort.Interface.
@@ -60,8 +59,7 @@ func (r *Rule) GetTag() (string, error) {
 	return r.Tag, nil
 }
 
-// Apply checks rule matching of current routing context.
-func (r *Rule) Apply(ctx routing.Context) bool {
+func (r *Rule) Apply(ctx *Context) bool {
 	return r.Condition.Apply(ctx)
 }
 
@@ -85,13 +83,9 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	}
 
 	if rr.PortList != nil {
-		conds.Add(NewPortMatcher(rr.PortList, false))
+		conds.Add(NewPortMatcher(rr.PortList))
 	} else if rr.PortRange != nil {
-		conds.Add(NewPortMatcher(&net.PortList{Range: []*net.PortRange{rr.PortRange}}, false))
-	}
-
-	if rr.SourcePortList != nil {
-		conds.Add(NewPortMatcher(rr.SourcePortList, true))
+		conds.Add(NewPortMatcher(&net.PortList{Range: []*net.PortRange{rr.PortRange}}))
 	}
 
 	if len(rr.Networks) > 0 {

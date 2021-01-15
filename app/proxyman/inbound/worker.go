@@ -6,21 +6,21 @@ import (
 	"sync/atomic"
 	"time"
 
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal/done"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tcp"
-	"v2ray.com/core/transport/internet/udp"
-	"v2ray.com/core/transport/pipe"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/common/signal/done"
+	"github.com/SwordJason/v2ray-core/common/task"
+	"github.com/SwordJason/v2ray-core/features/routing"
+	"github.com/SwordJason/v2ray-core/features/stats"
+	"github.com/SwordJason/v2ray-core/proxy"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/tcp"
+	"github.com/SwordJason/v2ray-core/transport/internet/udp"
+	"github.com/SwordJason/v2ray-core/transport/pipe"
 )
 
 type worker interface {
@@ -43,8 +43,6 @@ type tcpWorker struct {
 	downlinkCounter stats.Counter
 
 	hub internet.Listener
-
-	ctx context.Context
 }
 
 func getTProxyType(s *internet.MemoryStreamConfig) internet.SocketConfig_TProxyMode {
@@ -55,7 +53,7 @@ func getTProxyType(s *internet.MemoryStreamConfig) internet.SocketConfig_TProxyM
 }
 
 func (w *tcpWorker) callback(conn internet.Connection) {
-	ctx, cancel := context.WithCancel(w.ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	sid := session.NewID()
 	ctx = session.ContextWithID(ctx, sid)
 
@@ -91,9 +89,9 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 	ctx = session.ContextWithContent(ctx, content)
 	if w.uplinkCounter != nil || w.downlinkCounter != nil {
 		conn = &internet.StatCouterConnection{
-			Connection:   conn,
-			ReadCounter:  w.uplinkCounter,
-			WriteCounter: w.downlinkCounter,
+			Connection: conn,
+			Uplink:     w.uplinkCounter,
+			Downlink:   w.downlinkCounter,
 		}
 	}
 	if err := w.proxy.Process(ctx, net.Network_TCP, conn, w.dispatcher); err != nil {
@@ -200,7 +198,7 @@ func (c *udpConn) RemoteAddr() net.Addr {
 }
 
 func (c *udpConn) LocalAddr() net.Addr {
-	return c.local
+	return c.remote
 }
 
 func (*udpConn) SetDeadline(time.Time) error {
@@ -332,7 +330,7 @@ func (w *udpWorker) clean() error {
 	}
 
 	for addr, conn := range w.activeConn {
-		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 8 { //TODO Timeout too small
+		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 8 {
 			delete(w.activeConn, addr)
 			conn.Close() // nolint: errcheck
 		}

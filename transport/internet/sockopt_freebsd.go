@@ -35,7 +35,6 @@ type pfiocNatlook struct {
 
 const (
 	sizeofPfiocNatlook = 0x4c
-	soReUsePort        = 0x00000200
 	soReUsePortLB      = 0x00010000
 )
 
@@ -188,8 +187,13 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 }
 
 func bindAddr(fd uintptr, ip []byte, port uint32) error {
-	setReuseAddr(fd)
-	setReusePort(fd)
+	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
+		return newError("failed to set resuse_addr").Base(err).AtWarning()
+	}
+
+	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, soReUsePortLB, 1); err != nil {
+		return newError("failed to set resuse_port").Base(err).AtWarning()
+	}
 
 	var sockaddr syscall.Sockaddr
 
@@ -211,20 +215,4 @@ func bindAddr(fd uintptr, ip []byte, port uint32) error {
 	}
 
 	return syscall.Bind(int(fd), sockaddr)
-}
-
-func setReuseAddr(fd uintptr) error {
-	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
-		return newError("failed to set SO_REUSEADDR").Base(err).AtWarning()
-	}
-	return nil
-}
-
-func setReusePort(fd uintptr) error {
-	if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, soReUsePortLB, 1); err != nil {
-		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, soReUsePort, 1); err != nil {
-			return newError("failed to set SO_REUSEPORT").Base(err).AtWarning()
-		}
-	}
-	return nil
 }

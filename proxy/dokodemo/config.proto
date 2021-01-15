@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package v2ray.core.proxy.dokodemo;
 option csharp_namespace = "V2Ray.Core.Proxy.Dokodemo";
-option go_package = "v2ray.com/core/proxy/dokodemo";
+option go_package = "dokodemo";
 option java_package = "com.v2ray.core.proxy.dokodemo";
 option java_multiple_files = true;
 
-import "common/net/address.proto";
-import "common/net/network.proto";
+import "github.com/SwordJason/v2ray-core/common/net/address.proto";
+import "github.com/SwordJason/v2ray-core/common/net/network.proto";
 
 message Config {
   v2ray.core.common.net.IPOrDomain address = 1;

@@ -5,14 +5,14 @@ import (
 	"sync"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/mux"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common/dice"
+	"github.com/SwordJason/v2ray-core/common/mux"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/task"
+	"github.com/SwordJason/v2ray-core/proxy"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 type DynamicInboundHandler struct {
@@ -28,8 +28,6 @@ type DynamicInboundHandler struct {
 	lastRefresh    time.Time
 	mux            *mux.Server
 	task           *task.Periodic
-
-	ctx context.Context
 }
 
 func NewDynamicInboundHandler(ctx context.Context, tag string, receiverConfig *proxyman.ReceiverConfig, proxyConfig interface{}) (*DynamicInboundHandler, error) {
@@ -41,7 +39,6 @@ func NewDynamicInboundHandler(ctx context.Context, tag string, receiverConfig *p
 		portsInUse:     make(map[net.Port]bool),
 		mux:            mux.NewServer(ctx),
 		v:              v,
-		ctx:            ctx,
 	}
 
 	mss, err := internet.ToMemoryStreamConfig(receiverConfig.StreamSettings)
@@ -137,7 +134,6 @@ func (h *DynamicInboundHandler) refresh() error {
 				sniffingConfig:  h.receiverConfig.GetEffectiveSniffingSettings(),
 				uplinkCounter:   uplinkCounter,
 				downlinkCounter: downlinkCounter,
-				ctx:             h.ctx,
 			}
 			if err := worker.Start(); err != nil {
 				newError("failed to create TCP worker").Base(err).AtWarning().WriteToLog()

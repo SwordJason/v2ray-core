@@ -6,24 +6,24 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"v2ray.com/core"
-	"v2ray.com/core/app/log"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	clog "v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/uuid"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/inbound"
-	"v2ray.com/core/proxy/vmess/outbound"
-	"v2ray.com/core/testing/servers/tcp"
-	"v2ray.com/core/testing/servers/udp"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/kcp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/log"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common"
+	clog "github.com/SwordJason/v2ray-core/common/log"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/common/uuid"
+	"github.com/SwordJason/v2ray-core/proxy/dokodemo"
+	"github.com/SwordJason/v2ray-core/proxy/freedom"
+	"github.com/SwordJason/v2ray-core/proxy/vmess"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/inbound"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/outbound"
+	"github.com/SwordJason/v2ray-core/testing/servers/tcp"
+	"github.com/SwordJason/v2ray-core/testing/servers/udp"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/kcp"
 )
 
 func TestVMessDynamicPort(t *testing.T) {
@@ -919,6 +919,7 @@ func TestVMessKCPLarge(t *testing.T) {
 
 	servers, err := InitializeServerConfigs(serverConfig, clientConfig)
 	common.Must(err)
+	defer CloseAllServers(servers)
 
 	var errg errgroup.Group
 	for i := 0; i < 2; i++ {
@@ -927,11 +928,6 @@ func TestVMessKCPLarge(t *testing.T) {
 	if err := errg.Wait(); err != nil {
 		t.Error(err)
 	}
-
-	defer func() {
-		<-time.After(5 * time.Second)
-		CloseAllServers(servers)
-	}()
 }
 
 func TestVMessGCMMux(t *testing.T) {
@@ -1165,6 +1161,7 @@ func TestVMessGCMMuxUDP(t *testing.T) {
 
 	servers, err := InitializeServerConfigs(serverConfig, clientConfig)
 	common.Must(err)
+	defer CloseAllServers(servers)
 
 	for range "abcd" {
 		var errg errgroup.Group
@@ -1177,9 +1174,4 @@ func TestVMessGCMMuxUDP(t *testing.T) {
 		}
 		time.Sleep(time.Second)
 	}
-
-	defer func() {
-		<-time.After(5 * time.Second)
-		CloseAllServers(servers)
-	}()
 }

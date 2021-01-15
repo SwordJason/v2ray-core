@@ -2,32 +2,31 @@
 
 package dokodemo
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 import (
 	"context"
 	"sync/atomic"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/common/signal"
+	"github.com/SwordJason/v2ray-core/common/task"
+	"github.com/SwordJason/v2ray-core/features/policy"
+	"github.com/SwordJason/v2ray-core/features/routing"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		d := new(DokodemoDoor)
 		err := core.RequireFeatures(ctx, func(pm policy.Manager) error {
-			return d.Init(config.(*Config), pm, session.SockoptFromContext(ctx))
+			return d.Init(config.(*Config), pm)
 		})
 		return d, err
 	}))
@@ -38,11 +37,10 @@ type DokodemoDoor struct {
 	config        *Config
 	address       net.Address
 	port          net.Port
-	sockopt       *session.Sockopt
 }
 
 // Init initializes the DokodemoDoor instance with necessary parameters.
-func (d *DokodemoDoor) Init(config *Config, pm policy.Manager, sockopt *session.Sockopt) error {
+func (d *DokodemoDoor) Init(config *Config, pm policy.Manager) error {
 	if (config.NetworkList == nil || len(config.NetworkList.Network) == 0) && len(config.Networks) == 0 {
 		return newError("no network specified")
 	}
@@ -50,7 +48,6 @@ func (d *DokodemoDoor) Init(config *Config, pm policy.Manager, sockopt *session.
 	d.address = config.GetPredefinedAddress()
 	d.port = net.Port(config.Port)
 	d.policyManager = pm
-	d.sockopt = sockopt
 
 	return nil
 }
@@ -109,14 +106,6 @@ func (d *DokodemoDoor) Process(ctx context.Context, network net.Network, conn in
 		}
 	}
 
-	ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-		From:   conn.RemoteAddr(),
-		To:     dest,
-		Status: log.AccessAccepted,
-		Reason: "",
-	})
-	newError("received request for ", conn.RemoteAddr()).WriteToLog(session.ExportIDToError(ctx))
-
 	plcy := d.policy()
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, plcy.Timeouts.ConnectionIdle)
@@ -167,9 +156,6 @@ func (d *DokodemoDoor) Process(ctx context.Context, network net.Network, conn in
 				sockopt.BindAddress = dest.Address.IP()
 				sockopt.BindPort = uint32(dest.Port)
 			}
-			if d.sockopt != nil {
-				sockopt.Mark = d.sockopt.Mark
-			}
 			tConn, err := internet.DialSystem(ctx, net.DestinationFromAddr(conn.RemoteAddr()), sockopt)
 			if err != nil {
 				return err
@@ -202,9 +188,7 @@ func (d *DokodemoDoor) Process(ctx context.Context, network net.Network, conn in
 		return nil
 	}
 
-	if err := task.Run(ctx, task.OnSuccess(func() error {
-		return task.Run(ctx, requestDone, tproxyRequest)
-	}, task.Close(link.Writer)), responseDone); err != nil {
+	if err := task.Run(ctx, task.OnSuccess(requestDone, task.Close(link.Writer)), responseDone, tproxyRequest); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)
 		return newError("connection ends").Base(err)

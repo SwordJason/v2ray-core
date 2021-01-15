@@ -4,15 +4,15 @@
 
 package blackhole
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 import (
 	"context"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/transport"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/transport"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 // Handler is an outbound connection that silently swallow the entire payload.

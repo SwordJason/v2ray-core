@@ -2,16 +2,17 @@ syntax = "proto3";
 
 package v2ray.core.app.proxyman;
 option csharp_namespace = "V2Ray.Core.App.Proxyman";
-option go_package = "v2ray.com/core/app/proxyman";
+option go_package = "proxyman";
 option java_package = "com.v2ray.core.app.proxyman";
 option java_multiple_files = true;
 
-import "common/net/address.proto";
-import "common/net/port.proto";
-import "transport/internet/config.proto";
-import "common/serial/typed_message.proto";
+import "github.com/SwordJason/v2ray-core/common/net/address.proto";
+import "github.com/SwordJason/v2ray-core/common/net/port.proto";
+import "github.com/SwordJason/v2ray-core/transport/internet/config.proto";
+import "github.com/SwordJason/v2ray-core/common/serial/typed_message.proto";
 
-message InboundConfig {}
+message InboundConfig {
+}
 
 message AllocationStrategy {
   enum Type {
@@ -34,6 +35,7 @@ message AllocationStrategy {
   // Number of handlers (ports) running in parallel.
   // Default value is 3 if unset.
   AllocationStrategyConcurrency concurrency = 2;
+
 
   message AllocationStrategyRefresh {
     uint32 value = 1;
@@ -79,7 +81,9 @@ message InboundHandlerConfig {
   v2ray.core.common.serial.TypedMessage proxy_settings = 3;
 }
 
-message OutboundConfig {}
+message OutboundConfig {
+
+}
 
 message SenderConfig {
   // Send traffic through the given IP. Only IP is allowed.

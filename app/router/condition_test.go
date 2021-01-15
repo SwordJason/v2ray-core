@@ -8,50 +8,36 @@ import (
 
 	proto "github.com/golang/protobuf/proto"
 
-	. "v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/common/platform/filesystem"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/protocol/http"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/features/routing"
-	routing_session "v2ray.com/core/features/routing/session"
+	. "github.com/SwordJason/v2ray-core/app/router"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/errors"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/platform"
+	"github.com/SwordJason/v2ray-core/common/platform/filesystem"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/protocol/http"
+	"github.com/SwordJason/v2ray-core/common/session"
 )
 
 func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
-	}
-	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geosite.dat"), filepath.Join(wd, "..", "..", "release", "config", "geosite.dat")))
-	}
+	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
+	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geosite.dat"), filepath.Join(wd, "..", "..", "release", "config", "geosite.dat")))
 }
 
-func withBackground() routing.Context {
-	return &routing_session.Context{}
+func withOutbound(outbound *session.Outbound) *Context {
+	return &Context{Outbound: outbound}
 }
 
-func withOutbound(outbound *session.Outbound) routing.Context {
-	return &routing_session.Context{Outbound: outbound}
-}
-
-func withInbound(inbound *session.Inbound) routing.Context {
-	return &routing_session.Context{Inbound: inbound}
-}
-
-func withContent(content *session.Content) routing.Context {
-	return &routing_session.Context{Content: content}
+func withInbound(inbound *session.Inbound) *Context {
+	return &Context{Inbound: inbound}
 }
 
 func TestRoutingRule(t *testing.T) {
 	type ruleTest struct {
-		input  routing.Context
+		input  *Context
 		output bool
 	}
 
@@ -102,7 +88,7 @@ func TestRoutingRule(t *testing.T) {
 					output: false,
 				},
 				{
-					input:  withBackground(),
+					input:  &Context{},
 					output: false,
 				},
 			},
@@ -138,7 +124,7 @@ func TestRoutingRule(t *testing.T) {
 					output: true,
 				},
 				{
-					input:  withBackground(),
+					input:  &Context{},
 					output: false,
 				},
 			},
@@ -178,7 +164,7 @@ func TestRoutingRule(t *testing.T) {
 					output: true,
 				},
 				{
-					input:  withBackground(),
+					input:  &Context{},
 					output: false,
 				},
 			},
@@ -219,7 +205,7 @@ func TestRoutingRule(t *testing.T) {
 					output: false,
 				},
 				{
-					input:  withBackground(),
+					input:  &Context{},
 					output: false,
 				},
 			},
@@ -230,7 +216,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 			test: []ruleTest{
 				{
-					input:  withContent(&session.Content{Protocol: (&http.SniffHeader{}).Protocol()}),
+					input:  &Context{Content: &session.Content{Protocol: (&http.SniffHeader{}).Protocol()}},
 					output: true,
 				},
 			},
@@ -280,40 +266,12 @@ func TestRoutingRule(t *testing.T) {
 		},
 		{
 			rule: &RoutingRule{
-				SourcePortList: &net.PortList{
-					Range: []*net.PortRange{
-						{From: 123, To: 123},
-						{From: 9993, To: 9999},
-					},
-				},
-			},
-			test: []ruleTest{
-				{
-					input:  withInbound(&session.Inbound{Source: net.UDPDestination(net.LocalHostIP, 123)}),
-					output: true,
-				},
-				{
-					input:  withInbound(&session.Inbound{Source: net.UDPDestination(net.LocalHostIP, 9999)}),
-					output: true,
-				},
-				{
-					input:  withInbound(&session.Inbound{Source: net.UDPDestination(net.LocalHostIP, 9994)}),
-					output: true,
-				},
-				{
-					input:  withInbound(&session.Inbound{Source: net.UDPDestination(net.LocalHostIP, 53)}),
-					output: false,
-				},
-			},
-		},
-		{
-			rule: &RoutingRule{
 				Protocol:   []string{"http"},
 				Attributes: "attrs[':path'].startswith('/test')",
 			},
 			test: []ruleTest{
 				{
-					input:  withContent(&session.Content{Protocol: "http/1.1", Attributes: map[string]string{":path": "/test/1"}}),
+					input:  &Context{Content: &session.Content{Protocol: "http/1.1", Attributes: map[string]interface{}{":path": "/test/1"}}},
 					output: true,
 				},
 			},

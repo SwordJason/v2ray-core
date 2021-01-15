@@ -6,15 +6,15 @@ import (
 	"bytes"
 	"context"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport/internet/udp"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/features/routing"
+	"github.com/SwordJason/v2ray-core/transport/internet/udp"
 )
 
 // CreateObject creates a new object based on the given V2Ray instance and config. The V2Ray instance may be nil.
 func CreateObject(v *Instance, config interface{}) (interface{}, error) {
-	ctx := v.ctx
+	ctx := context.Background()
 	if v != nil {
 		ctx = context.WithValue(ctx, v2rayKey, v)
 	}

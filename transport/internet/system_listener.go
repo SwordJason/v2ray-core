@@ -4,8 +4,8 @@ import (
 	"context"
 	"syscall"
 
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/session"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/session"
 )
 
 var (
@@ -15,10 +15,10 @@ var (
 type controller func(network, address string, fd uintptr) error
 
 type DefaultListener struct {
-	controllers []controller
+	contollers []controller
 }
 
-func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []controller) func(network, address string, c syscall.RawConn) error {
+func getControlFunc(ctx context.Context, sockopt *SocketConfig, contollers []controller) func(network, address string, c syscall.RawConn) error {
 	return func(network, address string, c syscall.RawConn) error {
 		return c.Control(func(fd uintptr) {
 			if sockopt != nil {
@@ -27,9 +27,7 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 				}
 			}
 
-			setReusePort(fd)
-
-			for _, controller := range controllers {
+			for _, controller := range contollers {
 				if err := controller(network, address, fd); err != nil {
 					newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
 				}
@@ -41,7 +39,9 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.Listener, error) {
 	var lc net.ListenConfig
 
-	lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
+	if sockopt != nil || len(dl.contollers) > 0 {
+		lc.Control = getControlFunc(ctx, sockopt, dl.contollers)
+	}
 
 	return lc.Listen(ctx, addr.Network(), addr.String())
 }
@@ -49,7 +49,9 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 func (dl *DefaultListener) ListenPacket(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.PacketConn, error) {
 	var lc net.ListenConfig
 
-	lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
+	if sockopt != nil || len(dl.contollers) > 0 {
+		lc.Control = getControlFunc(ctx, sockopt, dl.contollers)
+	}
 
 	return lc.ListenPacket(ctx, addr.Network(), addr.String())
 }
@@ -63,6 +65,6 @@ func RegisterListenerController(controller func(network, address string, fd uint
 		return newError("nil listener controller")
 	}
 
-	effectiveListener.controllers = append(effectiveListener.controllers, controller)
+	effectiveListener.contollers = append(effectiveListener.contollers, controller)
 	return nil
 }

@@ -6,11 +6,11 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/inbound"
-	"v2ray.com/core/proxy/vmess/outbound"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/proxy/vmess"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/inbound"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/outbound"
 )
 
 type VMessAccount struct {
@@ -123,6 +123,8 @@ type VMessOutboundTarget struct {
 type VMessOutboundConfig struct {
 	Receivers []*VMessOutboundTarget `json:"vnext"`
 }
+
+var bUser = "a06fe789-5ab1-480b-8124-ae4599801ff3"
 
 // Build implements Buildable
 func (c *VMessOutboundConfig) Build() (proto.Message, error) {

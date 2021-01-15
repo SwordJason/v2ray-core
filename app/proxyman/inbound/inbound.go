@@ -1,17 +1,17 @@
 package inbound
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 import (
 	"context"
 	"sync"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/features/inbound"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/features/inbound"
 )
 
 // Manager is to manage all inbound handlers.
@@ -148,13 +148,6 @@ func NewHandler(ctx context.Context, config *core.InboundHandlerConfig) (inbound
 	receiverSettings, ok := rawReceiverSettings.(*proxyman.ReceiverConfig)
 	if !ok {
 		return nil, newError("not a ReceiverConfig").AtError()
-	}
-
-	streamSettings := receiverSettings.StreamSettings
-	if streamSettings != nil && streamSettings.SocketSettings != nil {
-		ctx = session.ContextWithSockopt(ctx, &session.Sockopt{
-			Mark: streamSettings.SocketSettings.Mark,
-		})
 	}
 
 	allocStrategy := receiverSettings.AllocationStrategy

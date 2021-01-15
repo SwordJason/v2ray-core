@@ -1,3 +1,3 @@
-package protocol // import "v2ray.com/core/common/protocol"
+package protocol // import "github.com/SwordJason/v2ray-core/common/protocol"
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen

@@ -2,16 +2,15 @@ package conf_test
 
 import (
 	"encoding/json"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"v2ray.com/core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/protocol"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	. "v2ray.com/core/infra/conf"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	. "github.com/SwordJason/v2ray-core/infra/conf"
 )
 
 func TestStringListUnmarshalError(t *testing.T) {
@@ -217,7 +216,7 @@ func TestUserParsing(t *testing.T) {
 	if r := cmp.Diff(nUser, &protocol.User{
 		Level: 1,
 		Email: "love@v2ray.com",
-	}, cmpopts.IgnoreUnexported(protocol.User{})); r != "" {
+	}); r != "" {
 		t.Error(r)
 	}
 }

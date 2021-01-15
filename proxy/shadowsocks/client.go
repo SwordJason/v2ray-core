@@ -5,18 +5,18 @@ package shadowsocks
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/retry"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/transport"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/retry"
+	"github.com/SwordJason/v2ray-core/common/session"
+	"github.com/SwordJason/v2ray-core/common/signal"
+	"github.com/SwordJason/v2ray-core/common/task"
+	"github.com/SwordJason/v2ray-core/features/policy"
+	"github.com/SwordJason/v2ray-core/transport"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 // Client is a inbound handler for Shadowsocks protocol
@@ -29,7 +29,7 @@ type Client struct {
 func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	serverList := protocol.NewServerList()
 	for _, rec := range config.Server {
-		s, err := protocol.NewServerSpecFromPB(rec)
+		s, err := protocol.NewServerSpecFromPB(*rec)
 		if err != nil {
 			return nil, newError("failed to parse server spec").Base(err)
 		}
@@ -90,11 +90,15 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	}
 
 	user := server.PickUser()
-	_, ok := user.Account.(*MemoryAccount)
+	account, ok := user.Account.(*MemoryAccount)
 	if !ok {
 		return newError("user account is not valid")
 	}
 	request.User = user
+
+	if account.OneTimeAuth == Account_Auto || account.OneTimeAuth == Account_Enabled {
+		request.Option |= RequestOptionOneTimeAuth
+	}
 
 	sessionPolicy := c.policyManager.ForLevel(user.Level)
 	ctx, cancel := context.WithCancel(ctx)

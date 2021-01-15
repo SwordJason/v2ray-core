@@ -4,13 +4,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/platform"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/platform"
 )
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 func Run(args []string, input io.Reader) (buf.MultiBuffer, error) {
 	v2ctl := platform.GetToolLocation("v2ctl")
@@ -36,14 +35,9 @@ func Run(args []string, input io.Reader) (buf.MultiBuffer, error) {
 	if err := cmd.Wait(); err != nil {
 		msg := "failed to execute v2ctl"
 		if errBuffer.Len() > 0 {
-			msg += ": \n" + strings.TrimSpace(errBuffer.MultiBuffer.String())
+			msg += ": " + errBuffer.MultiBuffer.String()
 		}
 		return nil, newError(msg).Base(err)
-	}
-
-	// log stderr, info message
-	if !errBuffer.IsEmpty() {
-		newError("<v2ctl message> \n", strings.TrimSpace(errBuffer.MultiBuffer.String())).AtInfo().WriteToLog()
 	}
 
 	return outBuffer.MultiBuffer, nil

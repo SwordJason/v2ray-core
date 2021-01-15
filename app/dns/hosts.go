@@ -3,10 +3,10 @@
 package dns
 
 import (
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/strmatcher"
-	"v2ray.com/core/features"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/strmatcher"
+	"github.com/SwordJason/v2ray-core/features"
 )
 
 // StaticHosts represents static domain-ip mapping in DNS server.
@@ -106,14 +106,11 @@ func filterIP(ips []net.Address, option IPOption) []net.Address {
 
 // LookupIP returns IP address for the given domain, if exists in this StaticHosts.
 func (h *StaticHosts) LookupIP(domain string, option IPOption) []net.Address {
-	indices := h.matchers.Match(domain)
-	if len(indices) == 0 {
+	id := h.matchers.Match(domain)
+	if id == 0 {
 		return nil
 	}
-	ips := []net.Address{}
-	for _, id := range indices {
-		ips = append(ips, h.ips[id]...)
-	}
+	ips := h.ips[id]
 	if len(ips) == 1 && ips[0].Family().IsDomain() {
 		return ips
 	}

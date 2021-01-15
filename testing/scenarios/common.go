@@ -1,7 +1,6 @@
 package scenarios
 
 import (
-	"bytes"
 	"crypto/rand"
 	"fmt"
 	"io"
@@ -14,15 +13,16 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"v2ray.com/core"
-	"v2ray.com/core/app/dispatcher"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/retry"
-	"v2ray.com/core/common/serial"
+	"github.com/google/go-cmp/cmp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/dispatcher"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/errors"
+	"github.com/SwordJason/v2ray-core/common/log"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/retry"
+	"github.com/SwordJason/v2ray-core/common/serial"
 )
 
 func xor(b []byte) []byte {
@@ -196,13 +196,9 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 		if err != nil {
 			return err
 		}
-		_ = response
-
-		if r := bytes.Compare(response, xor(payload)); r != 0 {
+		if r := cmp.Diff(response, xor(payload)); r != "" {
 			return errors.New(r)
 		}
-
 		return nil
-
 	}
 }

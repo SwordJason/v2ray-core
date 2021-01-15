@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"v2ray.com/core/app/dns"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common/net"
+	"github.com/SwordJason/v2ray-core/app/dns"
+	"github.com/SwordJason/v2ray-core/app/router"
+	"github.com/SwordJason/v2ray-core/common/net"
 )
 
 type NameServerConfig struct {
@@ -62,12 +62,11 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 	}
 
 	var domains []*dns.NameServer_PriorityDomain
-	var originalRules []*dns.NameServer_OriginalRule
 
-	for _, rule := range c.Domains {
-		parsedDomain, err := parseDomainRule(rule)
+	for _, d := range c.Domains {
+		parsedDomain, err := parseDomainRule(d)
 		if err != nil {
-			return nil, newError("invalid domain rule: ", rule).Base(err)
+			return nil, newError("invalid domain rule: ", d).Base(err)
 		}
 
 		for _, pd := range parsedDomain {
@@ -76,10 +75,6 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 				Domain: pd.Value,
 			})
 		}
-		originalRules = append(originalRules, &dns.NameServer_OriginalRule{
-			Rule: rule,
-			Size: uint32(len(parsedDomain)),
-		})
 	}
 
 	geoipList, err := toCidrList(c.ExpectIPs)
@@ -95,7 +90,6 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 		},
 		PrioritizedDomain: domains,
 		Geoip:             geoipList,
-		OriginalRules:     originalRules,
 	}, nil
 }
 
@@ -190,19 +184,6 @@ func (c *DnsConfig) Build() (*dns.Config, error) {
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Full
 				mapping.Domain = domain[5:]
-
-				mappings = append(mappings, mapping)
-			} else if strings.HasPrefix(domain, "dotless:") {
-				mapping := getHostMapping(addr)
-				mapping.Type = dns.DomainMatchingType_Regex
-				switch substr := domain[8:]; {
-				case substr == "":
-					mapping.Domain = "^[^.]*$"
-				case !strings.Contains(substr, "."):
-					mapping.Domain = "^[^.]*" + substr + "[^.]*$"
-				default:
-					return nil, newError("substr in dotless rule should not contain a dot: ", substr)
-				}
 
 				mappings = append(mappings, mapping)
 			} else if strings.HasPrefix(domain, "ext:") {

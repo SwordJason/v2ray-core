@@ -3,34 +3,32 @@ package scenarios
 import (
 	"context"
 	"fmt"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"io"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/commander"
-	"v2ray.com/core/app/policy"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/app/proxyman/command"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/app/stats"
-	statscmd "v2ray.com/core/app/stats/command"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/uuid"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/inbound"
-	"v2ray.com/core/proxy/vmess/outbound"
-	"v2ray.com/core/testing/servers/tcp"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/commander"
+	"github.com/SwordJason/v2ray-core/app/policy"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/app/proxyman/command"
+	"github.com/SwordJason/v2ray-core/app/router"
+	"github.com/SwordJason/v2ray-core/app/stats"
+	statscmd "github.com/SwordJason/v2ray-core/app/stats/command"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/common/uuid"
+	"github.com/SwordJason/v2ray-core/proxy/dokodemo"
+	"github.com/SwordJason/v2ray-core/proxy/freedom"
+	"github.com/SwordJason/v2ray-core/proxy/vmess"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/inbound"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/outbound"
+	"github.com/SwordJason/v2ray-core/testing/servers/tcp"
 )
 
 func TestCommanderRemoveHandler(t *testing.T) {
@@ -267,9 +265,7 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 	common.Must(err)
 	defer CloseAllServers(servers)
 
-	if err := testTCPConn(clientPort, 1024, time.Second*5)(); err != io.EOF &&
-		/*We might wish to drain the connection*/
-		(err != nil && !strings.HasSuffix(err.Error(), "i/o timeout")) {
+	if err := testTCPConn(clientPort, 1024, time.Second*5)(); err != io.EOF {
 		t.Fatal("expected error: ", err)
 	}
 
@@ -472,7 +468,7 @@ func TestCommanderStats(t *testing.T) {
 	if r := cmp.Diff(sresp.Stat, &statscmd.Stat{
 		Name:  name,
 		Value: 10240 * 1024,
-	}, cmpopts.IgnoreUnexported(statscmd.Stat{})); r != "" {
+	}); r != "" {
 		t.Error(r)
 	}
 
@@ -483,7 +479,7 @@ func TestCommanderStats(t *testing.T) {
 	if r := cmp.Diff(sresp.Stat, &statscmd.Stat{
 		Name:  name,
 		Value: 0,
-	}, cmpopts.IgnoreUnexported(statscmd.Stat{})); r != "" {
+	}); r != "" {
 		t.Error(r)
 	}
 

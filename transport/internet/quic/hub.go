@@ -6,13 +6,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/lucas-clemente/quic-go"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol/tls/cert"
-	"v2ray.com/core/common/signal/done"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol/tls/cert"
+	"github.com/SwordJason/v2ray-core/common/signal/done"
+	quic "github.com/SwordJason/v2ray-core/external/github.com/lucas-clemente/quic-go"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/tls"
 )
 
 // Listener is an internet.Listener that listens for TCP connections.
@@ -25,16 +25,14 @@ type Listener struct {
 
 func (l *Listener) acceptStreams(session quic.Session) {
 	for {
-		stream, err := session.AcceptStream(context.Background())
+		stream, err := session.AcceptStream()
 		if err != nil {
 			newError("failed to accept stream").Base(err).WriteToLog()
 			select {
 			case <-session.Context().Done():
 				return
 			case <-l.done.Wait():
-				if err := session.CloseWithError(0, ""); err != nil {
-					newError("failed to close session").Base(err).WriteToLog()
-				}
+				session.Close()
 				return
 			default:
 				time.Sleep(time.Second)
@@ -55,7 +53,7 @@ func (l *Listener) acceptStreams(session quic.Session) {
 
 func (l *Listener) keepAccepting() {
 	for {
-		conn, err := l.listener.Accept(context.Background())
+		conn, err := l.listener.Accept()
 		if err != nil {
 			newError("failed to accept QUIC sessions").Base(err).WriteToLog()
 			if l.done.Done() {
@@ -107,7 +105,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 	quicConfig := &quic.Config{
 		ConnectionIDLength:    12,
 		HandshakeTimeout:      time.Second * 8,
-		MaxIdleTimeout:        time.Second * 45,
+		IdleTimeout:           time.Second * 45,
 		MaxIncomingStreams:    32,
 		MaxIncomingUniStreams: -1,
 	}

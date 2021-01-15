@@ -6,7 +6,7 @@ import (
 	"container/list"
 	"sync"
 
-	"v2ray.com/core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/buf"
 )
 
 type SendingWindow struct {
@@ -121,7 +121,10 @@ func (sw *SendingWindow) Flush(current uint32, rto uint32, maxInFlightSize uint3
 		segment.transmit++
 		sw.writer.Write(segment)
 		inFlightSize++
-		return inFlightSize < maxInFlightSize
+		if inFlightSize >= maxInFlightSize {
+			return false
+		}
+		return true
 	})
 
 	if sw.onPacketLoss != nil && inFlightSize > 0 && sw.totalInFlightSize != 0 {

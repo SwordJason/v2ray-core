@@ -8,13 +8,12 @@ import (
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/strmatcher"
-	"v2ray.com/core/features/routing"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/strmatcher"
 )
 
 type Condition interface {
-	Apply(ctx routing.Context) bool
+	Apply(ctx *Context) bool
 }
 
 type ConditionChan []Condition
@@ -29,8 +28,7 @@ func (v *ConditionChan) Add(cond Condition) *ConditionChan {
 	return v
 }
 
-// Apply applies all conditions registered in this chan.
-func (v *ConditionChan) Apply(ctx routing.Context) bool {
+func (v *ConditionChan) Apply(ctx *Context) bool {
 	for _, cond := range *v {
 		if !cond.Apply(ctx) {
 			return false
@@ -84,21 +82,39 @@ func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
 }
 
 func (m *DomainMatcher) ApplyDomain(domain string) bool {
-	return len(m.matchers.Match(domain)) > 0
+	return m.matchers.Match(domain) > 0
 }
 
-// Apply implements Condition.
-func (m *DomainMatcher) Apply(ctx routing.Context) bool {
-	domain := ctx.GetTargetDomain()
-	if len(domain) == 0 {
+func (m *DomainMatcher) Apply(ctx *Context) bool {
+	if ctx.Outbound == nil || !ctx.Outbound.Target.IsValid() {
 		return false
 	}
-	return m.ApplyDomain(domain)
+	dest := ctx.Outbound.Target
+	if !dest.Address.Family().IsDomain() {
+		return false
+	}
+	return m.ApplyDomain(dest.Address.Domain())
+}
+
+func getIPsFromSource(ctx *Context) []net.IP {
+	if ctx.Inbound == nil || !ctx.Inbound.Source.IsValid() {
+		return nil
+	}
+	dest := ctx.Inbound.Source
+	if dest.Address.Family().IsDomain() {
+		return nil
+	}
+
+	return []net.IP{dest.Address.IP()}
+}
+
+func getIPsFromTarget(ctx *Context) []net.IP {
+	return ctx.GetTargetIPs()
 }
 
 type MultiGeoIPMatcher struct {
 	matchers []*GeoIPMatcher
-	onSource bool
+	ipFunc   func(*Context) []net.IP
 }
 
 func NewMultiGeoIPMatcher(geoips []*GeoIP, onSource bool) (*MultiGeoIPMatcher, error) {
@@ -113,20 +129,20 @@ func NewMultiGeoIPMatcher(geoips []*GeoIP, onSource bool) (*MultiGeoIPMatcher, e
 
 	matcher := &MultiGeoIPMatcher{
 		matchers: matchers,
-		onSource: onSource,
+	}
+
+	if onSource {
+		matcher.ipFunc = getIPsFromSource
+	} else {
+		matcher.ipFunc = getIPsFromTarget
 	}
 
 	return matcher, nil
 }
 
-// Apply implements Condition.
-func (m *MultiGeoIPMatcher) Apply(ctx routing.Context) bool {
-	var ips []net.IP
-	if m.onSource {
-		ips = ctx.GetSourceIPs()
-	} else {
-		ips = ctx.GetTargetIPs()
-	}
+func (m *MultiGeoIPMatcher) Apply(ctx *Context) bool {
+	ips := m.ipFunc(ctx)
+
 	for _, ip := range ips {
 		for _, matcher := range m.matchers {
 			if matcher.Match(ip) {
@@ -138,25 +154,20 @@ func (m *MultiGeoIPMatcher) Apply(ctx routing.Context) bool {
 }
 
 type PortMatcher struct {
-	port     net.MemoryPortList
-	onSource bool
+	port net.MemoryPortList
 }
 
-// NewPortMatcher create a new port matcher that can match source or destination port
-func NewPortMatcher(list *net.PortList, onSource bool) *PortMatcher {
+func NewPortMatcher(list *net.PortList) *PortMatcher {
 	return &PortMatcher{
-		port:     net.PortListFromProto(list),
-		onSource: onSource,
+		port: net.PortListFromProto(list),
 	}
 }
 
-// Apply implements Condition.
-func (v *PortMatcher) Apply(ctx routing.Context) bool {
-	if v.onSource {
-		return v.port.Contains(ctx.GetSourcePort())
-	} else {
-		return v.port.Contains(ctx.GetTargetPort())
+func (v *PortMatcher) Apply(ctx *Context) bool {
+	if ctx.Outbound == nil || !ctx.Outbound.Target.IsValid() {
+		return false
 	}
+	return v.port.Contains(ctx.Outbound.Target.Port)
 }
 
 type NetworkMatcher struct {
@@ -171,9 +182,11 @@ func NewNetworkMatcher(network []net.Network) NetworkMatcher {
 	return matcher
 }
 
-// Apply implements Condition.
-func (v NetworkMatcher) Apply(ctx routing.Context) bool {
-	return v.list[int(ctx.GetNetwork())]
+func (v NetworkMatcher) Apply(ctx *Context) bool {
+	if ctx.Outbound == nil || !ctx.Outbound.Target.IsValid() {
+		return false
+	}
+	return v.list[int(ctx.Outbound.Target.Network)]
 }
 
 type UserMatcher struct {
@@ -192,14 +205,17 @@ func NewUserMatcher(users []string) *UserMatcher {
 	}
 }
 
-// Apply implements Condition.
-func (v *UserMatcher) Apply(ctx routing.Context) bool {
-	user := ctx.GetUser()
-	if len(user) == 0 {
+func (v *UserMatcher) Apply(ctx *Context) bool {
+	if ctx.Inbound == nil {
+		return false
+	}
+
+	user := ctx.Inbound.User
+	if user == nil {
 		return false
 	}
 	for _, u := range v.user {
-		if u == user {
+		if u == user.Email {
 			return true
 		}
 	}
@@ -222,12 +238,11 @@ func NewInboundTagMatcher(tags []string) *InboundTagMatcher {
 	}
 }
 
-// Apply implements Condition.
-func (v *InboundTagMatcher) Apply(ctx routing.Context) bool {
-	tag := ctx.GetInboundTag()
-	if len(tag) == 0 {
+func (v *InboundTagMatcher) Apply(ctx *Context) bool {
+	if ctx.Inbound == nil || len(ctx.Inbound.Tag) == 0 {
 		return false
 	}
+	tag := ctx.Inbound.Tag
 	for _, t := range v.tags {
 		if t == tag {
 			return true
@@ -254,17 +269,18 @@ func NewProtocolMatcher(protocols []string) *ProtocolMatcher {
 	}
 }
 
-// Apply implements Condition.
-func (m *ProtocolMatcher) Apply(ctx routing.Context) bool {
-	protocol := ctx.GetProtocol()
-	if len(protocol) == 0 {
+func (m *ProtocolMatcher) Apply(ctx *Context) bool {
+	if ctx.Content == nil {
 		return false
 	}
+
+	protocol := ctx.Content.Protocol
 	for _, p := range m.protocols {
 		if strings.HasPrefix(protocol, p) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -278,7 +294,10 @@ func NewAttributeMatcher(code string) (*AttributeMatcher, error) {
 		return nil, newError("attr rule").Base(err)
 	}
 	p, err := starlark.FileProgram(starFile, func(name string) bool {
-		return name == "attrs"
+		if name == "attrs" {
+			return true
+		}
+		return false
 	})
 	if err != nil {
 		return nil, err
@@ -288,11 +307,17 @@ func NewAttributeMatcher(code string) (*AttributeMatcher, error) {
 	}, nil
 }
 
-// Match implements attributes matching.
-func (m *AttributeMatcher) Match(attrs map[string]string) bool {
+func (m *AttributeMatcher) Match(attrs map[string]interface{}) bool {
 	attrsDict := new(starlark.Dict)
 	for key, value := range attrs {
-		attrsDict.SetKey(starlark.String(key), starlark.String(value))
+		var starValue starlark.Value
+		switch value := value.(type) {
+		case string:
+			starValue = starlark.String(value)
+		}
+		if starValue != nil {
+			attrsDict.SetKey(starlark.String(key), starValue)
+		}
 	}
 
 	predefined := make(starlark.StringDict)
@@ -309,11 +334,9 @@ func (m *AttributeMatcher) Match(attrs map[string]string) bool {
 	return satisfied != nil && bool(satisfied.Truth())
 }
 
-// Apply implements Condition.
-func (m *AttributeMatcher) Apply(ctx routing.Context) bool {
-	attributes := ctx.GetAttributes()
-	if attributes == nil {
+func (m *AttributeMatcher) Apply(ctx *Context) bool {
+	if ctx.Content == nil {
 		return false
 	}
-	return m.Match(attributes)
+	return m.Match(ctx.Content.Attributes)
 }

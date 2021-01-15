@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/common/signal/done"
-	"v2ray.com/core/common/signal/semaphore"
+	"github.com/SwordJason/v2ray-core/common/platform"
+	"github.com/SwordJason/v2ray-core/common/signal/done"
+	"github.com/SwordJason/v2ray-core/common/signal/semaphore"
 )
 
 // Writer is the interface for writing logs.
@@ -115,15 +115,6 @@ func CreateStdoutLogWriter() WriterCreator {
 	return func() Writer {
 		return &consoleLogWriter{
 			logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
-		}
-	}
-}
-
-// CreateStderrLogWriter returns a LogWriterCreator that creates LogWriter for stderr.
-func CreateStderrLogWriter() WriterCreator {
-	return func() Writer {
-		return &consoleLogWriter{
-			logger: log.New(os.Stderr, "", log.Ldate|log.Ltime),
 		}
 	}
 }

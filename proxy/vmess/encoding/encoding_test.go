@@ -1,18 +1,17 @@
 package encoding_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/uuid"
-	"v2ray.com/core/proxy/vmess"
-	. "v2ray.com/core/proxy/vmess/encoding"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/uuid"
+	"github.com/SwordJason/v2ray-core/proxy/vmess"
+	. "github.com/SwordJason/v2ray-core/proxy/vmess/encoding"
 )
 
 func toAccount(a *vmess.Account) protocol.Account {
@@ -43,7 +42,7 @@ func TestRequestSerialization(t *testing.T) {
 	}
 
 	buffer := buf.New()
-	client := NewClientSession(true, protocol.DefaultIDHash, context.TODO())
+	client := NewClientSession(protocol.DefaultIDHash)
 	common.Must(client.EncodeRequestHeader(expectedRequest, buffer))
 
 	buffer2 := buf.New()
@@ -93,7 +92,7 @@ func TestInvalidRequest(t *testing.T) {
 	}
 
 	buffer := buf.New()
-	client := NewClientSession(true, protocol.DefaultIDHash, context.TODO())
+	client := NewClientSession(protocol.DefaultIDHash)
 	common.Must(client.EncodeRequestHeader(expectedRequest, buffer))
 
 	buffer2 := buf.New()
@@ -134,7 +133,7 @@ func TestMuxRequest(t *testing.T) {
 	}
 
 	buffer := buf.New()
-	client := NewClientSession(true, protocol.DefaultIDHash, context.TODO())
+	client := NewClientSession(protocol.DefaultIDHash)
 	common.Must(client.EncodeRequestHeader(expectedRequest, buffer))
 
 	buffer2 := buf.New()

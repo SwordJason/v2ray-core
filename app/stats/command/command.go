@@ -2,7 +2,7 @@
 
 package command
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 
 	grpc "google.golang.org/grpc"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/stats"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/strmatcher"
-	feature_stats "v2ray.com/core/features/stats"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/stats"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/strmatcher"
+	feature_stats "github.com/SwordJason/v2ray-core/features/stats"
 )
 
 // statsServer is an implementation of StatsService.
@@ -63,7 +63,7 @@ func (s *statsServer) QueryStats(ctx context.Context, request *QueryStatsRequest
 		return nil, newError("QueryStats only works its own stats.Manager.")
 	}
 
-	manager.VisitCounters(func(name string, c feature_stats.Counter) bool {
+	manager.Visit(func(name string, c feature_stats.Counter) bool {
 		if matcher.Match(name) {
 			var value int64
 			if request.Reset_ {
@@ -103,8 +103,6 @@ func (s *statsServer) GetSysStats(ctx context.Context, request *SysStatsRequest)
 
 	return response, nil
 }
-
-func (s *statsServer) mustEmbedUnimplementedStatsServiceServer() {}
 
 type service struct {
 	statsManager feature_stats.Manager

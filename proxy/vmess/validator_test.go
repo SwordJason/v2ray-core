@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/uuid"
-	. "v2ray.com/core/proxy/vmess"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	"github.com/SwordJason/v2ray-core/common/uuid"
+	. "github.com/SwordJason/v2ray-core/proxy/vmess"
 )
 
 func toAccount(a *Account) protocol.Account {
@@ -39,7 +39,7 @@ func TestUserValidator(t *testing.T) {
 			common.Must2(serial.WriteUint64(idHash, uint64(ts)))
 			userHash := idHash.Sum(nil)
 
-			euser, ets, found, _ := v.Get(userHash)
+			euser, ets, found := v.Get(userHash)
 			if !found {
 				t.Fatal("user not found")
 			}
@@ -67,7 +67,7 @@ func TestUserValidator(t *testing.T) {
 			common.Must2(serial.WriteUint64(idHash, uint64(ts)))
 			userHash := idHash.Sum(nil)
 
-			euser, _, found, _ := v.Get(userHash)
+			euser, _, found := v.Get(userHash)
 			if found || euser != nil {
 				t.Error("unexpected user")
 			}

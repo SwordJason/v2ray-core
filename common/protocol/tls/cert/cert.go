@@ -1,21 +1,17 @@
 package cert
 
 import (
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/asn1"
 	"encoding/pem"
 	"math/big"
 	"time"
 
-	"v2ray.com/core/common"
+	"github.com/SwordJason/v2ray-core/common"
 )
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate errorgen
 
 type Certificate struct {
 	// Cerificate in ASN.1 DER format
@@ -94,39 +90,15 @@ func MustGenerate(parent *Certificate, opts ...Option) *Certificate {
 	return cert
 }
 
-func publicKey(priv interface{}) interface{} {
-	switch k := priv.(type) {
-	case *rsa.PrivateKey:
-		return &k.PublicKey
-	case *ecdsa.PrivateKey:
-		return &k.PublicKey
-	case ed25519.PrivateKey:
-		return k.Public().(ed25519.PublicKey)
-	default:
-		return nil
-	}
-}
-
 func Generate(parent *Certificate, opts ...Option) (*Certificate, error) {
-	var (
-		pKey      interface{}
-		parentKey interface{}
-		err       error
-	)
-	// higher signing performance than RSA2048
-	selfKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	selfKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, newError("failed to generate self private key").Base(err)
 	}
-	parentKey = selfKey
+
+	parentKey := selfKey
 	if parent != nil {
-		if _, e := asn1.Unmarshal(parent.PrivateKey, &ecPrivateKey{}); e == nil {
-			pKey, err = x509.ParseECPrivateKey(parent.PrivateKey)
-		} else if _, e := asn1.Unmarshal(parent.PrivateKey, &pkcs8{}); e == nil {
-			pKey, err = x509.ParsePKCS8PrivateKey(parent.PrivateKey)
-		} else if _, e := asn1.Unmarshal(parent.PrivateKey, &pkcs1PrivateKey{}); e == nil {
-			pKey, err = x509.ParsePKCS1PrivateKey(parent.PrivateKey)
-		}
+		pKey, err := x509.ParsePKCS1PrivateKey(parent.PrivateKey)
 		if err != nil {
 			return nil, newError("failed to parse parent private key").Base(err)
 		}
@@ -161,18 +133,13 @@ func Generate(parent *Certificate, opts ...Option) (*Certificate, error) {
 		parentCert = pCert
 	}
 
-	derBytes, err := x509.CreateCertificate(rand.Reader, template, parentCert, publicKey(selfKey), parentKey)
+	derBytes, err := x509.CreateCertificate(rand.Reader, template, parentCert, selfKey.Public(), parentKey)
 	if err != nil {
 		return nil, newError("failed to create certificate").Base(err)
 	}
 
-	privateKey, err := x509.MarshalPKCS8PrivateKey(selfKey)
-	if err != nil {
-		return nil, newError("Unable to marshal private key").Base(err)
-	}
-
 	return &Certificate{
 		Certificate: derBytes,
-		PrivateKey:  privateKey,
+		PrivateKey:  x509.MarshalPKCS1PrivateKey(selfKey),
 	}, nil
 }

@@ -1,8 +1,8 @@
 package udp
 
 import (
-	"v2ray.com/core/common"
-	"v2ray.com/core/transport/internet"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/transport/internet"
 )
 
 func init() {

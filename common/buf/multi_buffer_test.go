@@ -10,8 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"v2ray.com/core/common"
-	. "v2ray.com/core/common/buf"
+	"github.com/SwordJason/v2ray-core/common"
+	. "github.com/SwordJason/v2ray-core/common/buf"
 )
 
 func TestMultiBufferRead(t *testing.T) {

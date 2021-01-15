@@ -5,10 +5,10 @@ import (
 	"io"
 	"math/rand"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/bytespool"
-	"v2ray.com/core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/bytespool"
+	"github.com/SwordJason/v2ray-core/common/protocol"
 )
 
 type BytesGenerator func() []byte
@@ -248,14 +248,13 @@ func (w *AuthenticationWriter) seal(b []byte) (*buf.Buffer, error) {
 		paddingSize = int32(w.padding.NextPaddingLen())
 	}
 
-	sizeBytes := w.sizeParser.SizeBytes()
-	totalSize := sizeBytes + encryptedSize + paddingSize
+	totalSize := encryptedSize + paddingSize
 	if totalSize > buf.Size {
 		return nil, newError("size too large: ", totalSize)
 	}
 
 	eb := buf.New()
-	w.sizeParser.Encode(uint16(encryptedSize+paddingSize), eb.Extend(sizeBytes))
+	w.sizeParser.Encode(uint16(encryptedSize+paddingSize), eb.Extend(w.sizeParser.SizeBytes()))
 	if _, err := w.auth.Seal(eb.Extend(encryptedSize)[:0], b); err != nil {
 		eb.Release()
 		return nil, err

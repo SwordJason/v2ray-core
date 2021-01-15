@@ -4,16 +4,16 @@ package kcp
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"sync/atomic"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/xtls"
+	"github.com/SwordJason/v2ray-core/common"
+	"github.com/SwordJason/v2ray-core/common/buf"
+	"github.com/SwordJason/v2ray-core/common/dice"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	v2tls "github.com/SwordJason/v2ray-core/transport/internet/tls"
 )
 
 var (
@@ -88,10 +88,9 @@ func DialKCP(ctx context.Context, dest net.Destination, streamSettings *internet
 
 	var iConn internet.Connection = session
 
-	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
-		iConn = tls.Client(iConn, config.GetTLSConfig(tls.WithDestination(dest)))
-	} else if config := xtls.ConfigFromStreamSettings(streamSettings); config != nil {
-		iConn = xtls.Client(iConn, config.GetXTLSConfig(xtls.WithDestination(dest)))
+	if config := v2tls.ConfigFromStreamSettings(streamSettings); config != nil {
+		tlsConn := tls.Client(iConn, config.GetTLSConfig(v2tls.WithDestination(dest)))
+		iConn = tlsConn
 	}
 
 	return iConn, nil

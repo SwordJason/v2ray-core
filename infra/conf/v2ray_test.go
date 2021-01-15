@@ -6,27 +6,26 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/google/go-cmp/cmp"
-	"v2ray.com/core"
-	"v2ray.com/core/app/dispatcher"
-	"v2ray.com/core/app/log"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	clog "v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	. "v2ray.com/core/infra/conf"
-	"v2ray.com/core/proxy/blackhole"
-	dns_proxy "v2ray.com/core/proxy/dns"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/inbound"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/http"
-	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/websocket"
+	"github.com/SwordJason/v2ray-core"
+	"github.com/SwordJason/v2ray-core/app/dispatcher"
+	"github.com/SwordJason/v2ray-core/app/log"
+	"github.com/SwordJason/v2ray-core/app/proxyman"
+	"github.com/SwordJason/v2ray-core/app/router"
+	"github.com/SwordJason/v2ray-core/common"
+	clog "github.com/SwordJason/v2ray-core/common/log"
+	"github.com/SwordJason/v2ray-core/common/net"
+	"github.com/SwordJason/v2ray-core/common/protocol"
+	"github.com/SwordJason/v2ray-core/common/serial"
+	. "github.com/SwordJason/v2ray-core/infra/conf"
+	"github.com/SwordJason/v2ray-core/proxy/blackhole"
+	dns_proxy "github.com/SwordJason/v2ray-core/proxy/dns"
+	"github.com/SwordJason/v2ray-core/proxy/freedom"
+	"github.com/SwordJason/v2ray-core/proxy/vmess"
+	"github.com/SwordJason/v2ray-core/proxy/vmess/inbound"
+	"github.com/SwordJason/v2ray-core/transport/internet"
+	"github.com/SwordJason/v2ray-core/transport/internet/http"
+	"github.com/SwordJason/v2ray-core/transport/internet/tls"
+	"github.com/SwordJason/v2ray-core/transport/internet/websocket"
 )
 
 func TestV2RayConfig(t *testing.T) {
@@ -366,83 +365,6 @@ func TestMuxConfig_Build(t *testing.T) {
 			common.Must(json.Unmarshal([]byte(tt.fields), m))
 			if got := m.Build(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MuxConfig.Build() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfig_Override(t *testing.T) {
-	tests := []struct {
-		name string
-		orig *Config
-		over *Config
-		fn   string
-		want *Config
-	}{
-		{"combine/empty",
-			&Config{},
-			&Config{
-				LogConfig:    &LogConfig{},
-				RouterConfig: &RouterConfig{},
-				DNSConfig:    &DnsConfig{},
-				Transport:    &TransportConfig{},
-				Policy:       &PolicyConfig{},
-				Api:          &ApiConfig{},
-				Stats:        &StatsConfig{},
-				Reverse:      &ReverseConfig{},
-			},
-			"",
-			&Config{
-				LogConfig:    &LogConfig{},
-				RouterConfig: &RouterConfig{},
-				DNSConfig:    &DnsConfig{},
-				Transport:    &TransportConfig{},
-				Policy:       &PolicyConfig{},
-				Api:          &ApiConfig{},
-				Stats:        &StatsConfig{},
-				Reverse:      &ReverseConfig{},
-			},
-		},
-		{"combine/newattr",
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "old"}}},
-			&Config{LogConfig: &LogConfig{}}, "",
-			&Config{LogConfig: &LogConfig{}, InboundConfigs: []InboundDetourConfig{{Tag: "old"}}}},
-		{"replace/inbounds",
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos0"}, {Protocol: "vmess", Tag: "pos1"}}},
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}}},
-			"",
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos0"}, {Tag: "pos1", Protocol: "kcp"}}}},
-		{"replace/inbounds-replaceall",
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos0"}, {Protocol: "vmess", Tag: "pos1"}}},
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}, {Tag: "pos2", Protocol: "kcp"}}},
-			"",
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}, {Tag: "pos2", Protocol: "kcp"}}}},
-		{"replace/notag-append",
-			&Config{InboundConfigs: []InboundDetourConfig{{}, {Protocol: "vmess"}}},
-			&Config{InboundConfigs: []InboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}}},
-			"",
-			&Config{InboundConfigs: []InboundDetourConfig{{}, {Protocol: "vmess"}, {Tag: "pos1", Protocol: "kcp"}}}},
-		{"replace/outbounds",
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos0"}, {Protocol: "vmess", Tag: "pos1"}}},
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}}},
-			"",
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos0"}, {Tag: "pos1", Protocol: "kcp"}}}},
-		{"replace/outbounds-prepend",
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos0"}, {Protocol: "vmess", Tag: "pos1"}}},
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}, {Tag: "pos2", Protocol: "kcp"}}},
-			"config.json",
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos1", Protocol: "kcp"}, {Tag: "pos2", Protocol: "kcp"}}}},
-		{"replace/outbounds-append",
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos0"}, {Protocol: "vmess", Tag: "pos1"}}},
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos2", Protocol: "kcp"}}},
-			"config_tail.json",
-			&Config{OutboundConfigs: []OutboundDetourConfig{{Tag: "pos0"}, {Protocol: "vmess", Tag: "pos1"}, {Tag: "pos2", Protocol: "kcp"}}}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.orig.Override(tt.over, tt.fn)
-			if r := cmp.Diff(tt.orig, tt.want); r != "" {
-				t.Error(r)
 			}
 		})
 	}

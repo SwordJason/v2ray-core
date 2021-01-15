@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	commlog "v2ray.com/core/common/log"
-	// _ "v2ray.com/core/infra/conf/command"
-	"v2ray.com/core/infra/control"
+	_ "github.com/SwordJason/v2ray-core/infra/conf/command"
+	"github.com/SwordJason/v2ray-core/infra/control"
 )
 
 func getCommandName() string {
@@ -18,8 +17,6 @@ func getCommandName() string {
 }
 
 func main() {
-	// let the v2ctl prints log at stderr
-	commlog.RegisterHandler(commlog.NewLogger(commlog.CreateStderrLogWriter()))
 	name := getCommandName()
 	cmd := control.GetCommand(name)
 	if cmd == nil {
